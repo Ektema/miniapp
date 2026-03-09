@@ -336,14 +336,14 @@
       color: var(--blue);
     }
 
-    .address-clear {
-      background: none;
-      border: none;
-      color: var(--blue);
-      font-size: 14px;
-      cursor: pointer;
-      padding: 0 0 0 8px;
-      flex-shrink: 0;
+    .address-extra-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .address-extra {
+      flex: 1;
     }
   </style>
 </head>
@@ -461,9 +461,9 @@
       />
       <ul id="address-suggestions" class="suggestions"></ul>
     </div>
-    <div id="address-selected" class="address-selected" style="display:none">
-      <span id="address-selected-text"></span>
-      <button onclick="clearAddress()" class="address-clear">✕</button>
+    <div class="address-extra-row">
+      <input class="address-input address-extra" type="text" placeholder="Подъезд" id="entrance-input" />
+      <input class="address-input address-extra" type="text" placeholder="Квартира" id="apt-input" />
     </div>
   </div>
 
@@ -508,8 +508,6 @@
 const DADATA_KEY = "d5d8fbdd1dc1dd099a695d9326e125289b2b5818";
 const input = document.getElementById('address-input');
 const list  = document.getElementById('address-suggestions');
-const selectedBlock = document.getElementById('address-selected');
-const selectedText  = document.getElementById('address-selected-text');
 
 let debounceTimer;
 
@@ -548,16 +546,10 @@ function renderSuggestions(items) {
 }
 
 function selectAddress(value) {
-  input.value = '';
+  input.value = value;
   list.innerHTML = '';
-  selectedText.textContent = value;
-  selectedBlock.style.display = 'flex';
-}
-
-function clearAddress() {
-  selectedBlock.style.display = 'none';
-  selectedText.textContent = '';
-  input.value = '';
+  // Фокус на подъезд после выбора адреса
+  document.getElementById('entrance-input').focus();
 }
 
 document.addEventListener('click', (e) => {
