@@ -267,6 +267,84 @@
       75%  { content: '...'; }
       100% { content: ''; }
     }
+    /* ── Address form ── */
+    .address-wrap {
+      position: relative;
+    }
+
+    .address-input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      font-family: 'Manrope', sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--bg);
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .address-input:focus {
+      border-color: var(--blue);
+      background: #fff;
+    }
+
+    .suggestions {
+      list-style: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0; right: 0;
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.1);
+      z-index: 50;
+      overflow: hidden;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    .suggestions:empty { display: none; }
+
+    .suggestions li {
+      padding: 11px 14px;
+      font-size: 13px;
+      color: var(--text);
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      line-height: 1.4;
+    }
+
+    .suggestions li:last-child { border-bottom: none; }
+
+    .suggestions li:hover {
+      background: var(--blue-light);
+      color: var(--blue);
+    }
+
+    .address-selected {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--blue-light);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--blue);
+    }
+
+    .address-clear {
+      background: none;
+      border: none;
+      color: var(--blue);
+      font-size: 14px;
+      cursor: pointer;
+      padding: 0 0 0 8px;
+      flex-shrink: 0;
+    }
   </style>
 </head>
 <body>
@@ -368,9 +446,28 @@
     <div class="faq-item">Что насчёт возврата?</div>
   </div>
 
-</div>
+  <!-- Адрес доставки -->
+  <div class="card">
+    <div class="card-title">
+      <span class="icon">🚚</span> Адрес доставки
+    </div>
+    <div class="address-wrap">
+      <input
+        id="address-input"
+        class="address-input"
+        type="text"
+        placeholder="Начните вводить адрес..."
+        autocomplete="off"
+      />
+      <ul id="address-suggestions" class="suggestions"></ul>
+    </div>
+    <div id="address-selected" class="address-selected" style="display:none">
+      <span id="address-selected-text"></span>
+      <button onclick="clearAddress()" class="address-clear">✕</button>
+    </div>
+  </div>
 
-<!-- Bottom Navigation -->
+</div>
 <nav class="bottom-nav">
   <div class="nav-item">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -399,4 +496,74 @@
     Профиль
   </div>
   <div class="nav-item active">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentCo
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    О проекте
+  </div>
+</nav>
+
+<!-- DaData address autocomplete -->
+<script>
+const DADATA_KEY = "d5d8fbdd1dc1dd099a695d9326e125289b2b5818";
+const input = document.getElementById('address-input');
+const list  = document.getElementById('address-suggestions');
+const selectedBlock = document.getElementById('address-selected');
+const selectedText  = document.getElementById('address-selected-text');
+
+let debounceTimer;
+
+input.addEventListener('input', () => {
+  clearTimeout(debounceTimer);
+  const query = input.value.trim();
+  if (query.length < 3) { list.innerHTML = ''; return; }
+  debounceTimer = setTimeout(() => fetchSuggestions(query), 300);
+});
+
+async function fetchSuggestions(query) {
+  try {
+    const res = await fetch('https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/address', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token ' + DADATA_KEY
+      },
+      body: JSON.stringify({ query, count: 5, locations: [{ country: 'Россия' }] })
+    });
+    const data = await res.json();
+    renderSuggestions(data.suggestions || []);
+  } catch (e) {
+    list.innerHTML = '';
+  }
+}
+
+function renderSuggestions(items) {
+  list.innerHTML = '';
+  items.forEach(item => {
+    const li = document.createElement('li');
+    li.textContent = item.value;
+    li.addEventListener('click', () => selectAddress(item.value));
+    list.appendChild(li);
+  });
+}
+
+function selectAddress(value) {
+  input.value = '';
+  list.innerHTML = '';
+  selectedText.textContent = value;
+  selectedBlock.style.display = 'flex';
+}
+
+function clearAddress() {
+  selectedBlock.style.display = 'none';
+  selectedText.textContent = '';
+  input.value = '';
+}
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.address-wrap')) list.innerHTML = '';
+});
+</script>
+
+</body>
+</html>
