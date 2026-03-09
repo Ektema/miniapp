@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>О проекте — Неизбежно</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -219,9 +219,64 @@
       width: 22px;
       height: 22px;
     }
+
+    /* ── Loading screen ── */
+    .loader {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(6px);
+      z-index: 999;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .loader.visible {
+      display: flex;
+    }
+
+    .loader-flowers {
+      font-size: 36px;
+      animation: spin 1.6s linear infinite;
+    }
+
+    .loader-text {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--navy);
+      opacity: 0.8;
+    }
+
+    .loader-dots::after {
+      content: '';
+      animation: dots 1.2s steps(4, end) infinite;
+    }
+
+    @keyframes spin {
+      0%   { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes dots {
+      0%   { content: ''; }
+      25%  { content: '.'; }
+      50%  { content: '..'; }
+      75%  { content: '...'; }
+      100% { content: ''; }
+    }
   </style>
 </head>
 <body>
+
+<!-- Loading screen -->
+<div class="loader" id="loader">
+  <div class="loader-flowers">🌸</div>
+  <div class="loader-text">Открываем карту<span class="loader-dots"></span></div>
+</div>
+
 <div class="page">
 
   <!-- Гарантия качества -->
@@ -247,7 +302,7 @@
     </div>
     <div class="contact-row">
       <span class="contact-label">Почта</span>
-      <a href="mailto:neizbejnoflower@gmail.com" class="contact-value" style="font-size:12.5px">neizbejnoflower@gmail.com</a>
+      <a href="/cdn-cgi/l/email-protection#117f74786b73747b7f7e777d7e66746351767c70787d3f727e7c" class="contact-value" style="font-size:12.5px"><span class="__cf_email__" data-cfemail="f09e95998a92959a9e9f969c9f879582b0979d91999cde939f9d">[email&#160;protected]</span></a>
     </div>
     <div class="contact-row" style="border-bottom:none; padding-bottom:4px">
       <span class="contact-label">Адрес</span>
@@ -267,14 +322,30 @@
     </a>
 
     <script>
+    // 1. Разворачиваем на весь экран сразу
+    if (window.Telegram && window.Telegram.WebApp) {
+      Telegram.WebApp.expand();
+    }
+
+    // 2. Открываем карту с лоадером
     function openMap() {
       const appUrl = "yandexmaps://maps.yandex.ru/?ll=37.598663,55.746939&z=13&text=1-я+Тверская-Ямская+11";
       const webUrl = "https://yandex.ru/maps/org/ges_2/216491468916/?ll=37.598663%2C55.746939&z=13.07";
 
+      // Показываем лоадер
+      document.getElementById('loader').classList.add('visible');
+
+      // Пробуем открыть приложение Яндекс Карт
       window.location = appUrl;
 
+      // Через 1.5с если приложения нет — открываем через Telegram или браузер
       setTimeout(() => {
-        window.location.href = webUrl;
+        document.getElementById('loader').classList.remove('visible');
+        if (window.Telegram && window.Telegram.WebApp) {
+          Telegram.WebApp.openLink(webUrl);
+        } else {
+          window.location.href = webUrl;
+        }
       }, 1500);
     }
     </script>
@@ -328,12 +399,4 @@
     Профиль
   </div>
   <div class="nav-item active">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-    </svg>
-    О проекте
-  </div>
-</nav>
-
-</body>
-</html>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentCo
